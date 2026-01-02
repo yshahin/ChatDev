@@ -240,9 +240,15 @@ class ChatAgent(BaseAgent):
             if openai_new_api:
                 if not isinstance(response, ChatCompletion):
                     raise RuntimeError("OpenAI returned unexpected struct")
+                allowed_keys = set(ChatMessage.__dataclass_fields__.keys())
                 output_messages = [
-                    ChatMessage(role_name=self.role_name, role_type=self.role_type,
-                                meta_dict=dict(), **dict(choice.message))
+                    ChatMessage(
+                        role_name=self.role_name,
+                        role_type=self.role_type,
+                        meta_dict=dict(),
+                        **{k: v for k, v in dict(choice.message).items()
+                           if k in allowed_keys},
+                    )
                     for choice in response.choices
                 ]
                 info = self.get_info(
@@ -254,9 +260,15 @@ class ChatAgent(BaseAgent):
             else:
                 if not isinstance(response, dict):
                     raise RuntimeError("OpenAI returned unexpected struct")
+                allowed_keys = set(ChatMessage.__dataclass_fields__.keys())
                 output_messages = [
-                    ChatMessage(role_name=self.role_name, role_type=self.role_type,
-                                meta_dict=dict(), **dict(choice["message"]))
+                    ChatMessage(
+                        role_name=self.role_name,
+                        role_type=self.role_type,
+                        meta_dict=dict(),
+                        **{k: v for k, v in dict(choice["message"]).items()
+                           if k in allowed_keys},
+                    )
                     for choice in response["choices"]
                 ]
                 info = self.get_info(

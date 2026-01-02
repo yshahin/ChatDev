@@ -140,6 +140,36 @@ class OpenAIModel(ModelBackend):
             "gpt-4-32k": 32768,
             "gpt-4o": 4096, #100000
             "gpt-4o-mini": 16384, #100000
+            "gpt-4o-2024-08-06": 4096, #100000
+            "gpt-4o-mini-2024-07-18": 16384, #100000
+            "gpt-4.1": 4096, #100000
+            "gpt-4.1-mini": 16384, #100000
+            "gpt-5": 128000,
+            "gpt-5-mini": 128000,
+            "gpt-5-nano": 128000,
+            "gpt-5.2": 128000,
+            "gpt-5.2-mini": 128000,
+        }
+        num_max_output_token_map = {
+            "gpt-3.5-turbo": 4096,
+            "gpt-3.5-turbo-16k": 4096,
+            "gpt-3.5-turbo-0613": 4096,
+            "gpt-3.5-turbo-16k-0613": 4096,
+            "gpt-4": 4096,
+            "gpt-4-0613": 4096,
+            "gpt-4-32k": 4096,
+            "gpt-4-turbo": 4096,
+            "gpt-4o": 4096,
+            "gpt-4o-2024-08-06": 4096,
+            "gpt-4o-mini": 16384,
+            "gpt-4o-mini-2024-07-18": 16384,
+            "gpt-4.1": 4096,
+            "gpt-4.1-mini": 16384,
+            "gpt-5": 8192,
+            "gpt-5-mini": 16384,
+            "gpt-5-nano": 16384,
+            "gpt-5.2": 8192,
+            "gpt-5.2-mini": 16384,
         }
         response = client.chat.completions.create(messages = messages,
         model = "gpt-3.5-turbo-16k",
@@ -157,7 +187,10 @@ class OpenAIModel(ModelBackend):
 
         num_max_token = num_max_token_map[self.model_type]
         num_max_completion_tokens = num_max_token - num_prompt_tokens
-        self.model_config_dict['max_tokens'] = num_max_completion_tokens
+        if num_max_completion_tokens < 1:
+            num_max_completion_tokens = 1
+        num_max_output_tokens = num_max_output_token_map.get(self.model_type, 4096)
+        self.model_config_dict['max_tokens'] = min(num_max_completion_tokens, num_max_output_tokens)
         log_and_print_online(
             "InstructionStar generation:\n**[OpenAI_Usage_Info Receive]**\nprompt_tokens: {}\ncompletion_tokens: {}\ntotal_tokens: {}\n".format(
                 response["usage"]["prompt_tokens"], response["usage"]["completion_tokens"],

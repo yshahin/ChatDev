@@ -65,7 +65,10 @@ class OpenAIModel(ModelBackend):
 
     def run(self, *args, **kwargs):
         string = "\n".join([message["content"] for message in kwargs["messages"]])
-        encoding = tiktoken.encoding_for_model(self.model_type.value)
+        try:
+            encoding = tiktoken.encoding_for_model(self.model_type.value)
+        except KeyError:
+            encoding = tiktoken.get_encoding("cl100k_base")
         num_prompt_tokens = len(encoding.encode(string))
         gap_between_send_receive = 15 * len(kwargs["messages"])
         num_prompt_tokens += gap_between_send_receive
@@ -93,13 +96,55 @@ class OpenAIModel(ModelBackend):
                 "gpt-4-turbo": 100000,
                 "gpt-4o": 4096, #100000
                 "gpt-4o-mini": 16384, #100000
+                "gpt-4o-2024-08-06": 4096, #100000
+                "gpt-4o-mini-2024-07-18": 16384, #100000
+                "gpt-4.1": 4096, #100000
+                "gpt-4.1-mini": 16384, #100000
+                "gpt-5": 128000,
+                "gpt-5-mini": 128000,
+                "gpt-5-nano": 128000,
+                "gpt-5.2": 128000,
+                "gpt-5.2-mini": 128000,
+            }
+            num_max_output_token_map = {
+                "gpt-3.5-turbo": 4096,
+                "gpt-3.5-turbo-16k": 4096,
+                "gpt-3.5-turbo-0613": 4096,
+                "gpt-3.5-turbo-16k-0613": 4096,
+                "gpt-4": 4096,
+                "gpt-4-0613": 4096,
+                "gpt-4-32k": 4096,
+                "gpt-4-turbo": 4096,
+                "gpt-4o": 4096,
+                "gpt-4o-2024-08-06": 4096,
+                "gpt-4o-mini": 16384,
+                "gpt-4o-mini-2024-07-18": 16384,
+                "gpt-4.1": 4096,
+                "gpt-4.1-mini": 16384,
+                "gpt-5": 8192,
+                "gpt-5-mini": 16384,
+                "gpt-5-nano": 16384,
+                "gpt-5.2": 8192,
+                "gpt-5.2-mini": 16384,
             }
             num_max_token = num_max_token_map[self.model_type.value]
             num_max_completion_tokens = num_max_token - num_prompt_tokens
-            self.model_config_dict['max_tokens'] = num_max_completion_tokens
+            if num_max_completion_tokens < 1:
+                num_max_completion_tokens = 1
+            num_max_output_tokens = num_max_output_token_map.get(self.model_type.value, 4096)
+            num_max_completion_tokens = min(num_max_completion_tokens, num_max_output_tokens)
+
+            model_config = dict(self.model_config_dict)
+            if self.model_type.value.startswith("gpt-5"):
+                model_config.pop("max_tokens", None)
+                model_config.pop("logit_bias", None)
+                model_config["max_completion_tokens"] = num_max_completion_tokens
+            else:
+                model_config.pop("max_completion_tokens", None)
+                model_config["max_tokens"] = num_max_completion_tokens
 
             response = client.chat.completions.create(*args, **kwargs, model=self.model_type.value,
-                                                      **self.model_config_dict)
+                                                      **model_config)
 
             cost = prompt_cost(
                 self.model_type.value,
@@ -126,13 +171,55 @@ class OpenAIModel(ModelBackend):
                 "gpt-4-turbo": 100000,
                 "gpt-4o": 4096, #100000
                 "gpt-4o-mini": 16384, #100000
+                "gpt-4o-2024-08-06": 4096, #100000
+                "gpt-4o-mini-2024-07-18": 16384, #100000
+                "gpt-4.1": 4096, #100000
+                "gpt-4.1-mini": 16384, #100000
+                "gpt-5": 128000,
+                "gpt-5-mini": 128000,
+                "gpt-5-nano": 128000,
+                "gpt-5.2": 128000,
+                "gpt-5.2-mini": 128000,
+            }
+            num_max_output_token_map = {
+                "gpt-3.5-turbo": 4096,
+                "gpt-3.5-turbo-16k": 4096,
+                "gpt-3.5-turbo-0613": 4096,
+                "gpt-3.5-turbo-16k-0613": 4096,
+                "gpt-4": 4096,
+                "gpt-4-0613": 4096,
+                "gpt-4-32k": 4096,
+                "gpt-4-turbo": 4096,
+                "gpt-4o": 4096,
+                "gpt-4o-2024-08-06": 4096,
+                "gpt-4o-mini": 16384,
+                "gpt-4o-mini-2024-07-18": 16384,
+                "gpt-4.1": 4096,
+                "gpt-4.1-mini": 16384,
+                "gpt-5": 8192,
+                "gpt-5-mini": 16384,
+                "gpt-5-nano": 16384,
+                "gpt-5.2": 8192,
+                "gpt-5.2-mini": 16384,
             }
             num_max_token = num_max_token_map[self.model_type.value]
             num_max_completion_tokens = num_max_token - num_prompt_tokens
-            self.model_config_dict['max_tokens'] = num_max_completion_tokens
+            if num_max_completion_tokens < 1:
+                num_max_completion_tokens = 1
+            num_max_output_tokens = num_max_output_token_map.get(self.model_type.value, 4096)
+            num_max_completion_tokens = min(num_max_completion_tokens, num_max_output_tokens)
+
+            model_config = dict(self.model_config_dict)
+            if self.model_type.value.startswith("gpt-5"):
+                model_config.pop("max_tokens", None)
+                model_config.pop("logit_bias", None)
+                model_config["max_completion_tokens"] = num_max_completion_tokens
+            else:
+                model_config.pop("max_completion_tokens", None)
+                model_config["max_tokens"] = num_max_completion_tokens
 
             response = openai.ChatCompletion.create(*args, **kwargs, model=self.model_type.value,
-                                                    **self.model_config_dict)
+                                                    **model_config)
 
             cost = prompt_cost(
                 self.model_type.value,
@@ -177,7 +264,7 @@ class ModelFactory:
 
     @staticmethod
     def create(model_type: ModelType, model_config_dict: Dict) -> ModelBackend:
-        default_model_type = ModelType.GPT_3_5_TURBO
+        default_model_type = ModelType.GPT_5_2
 
         if model_type in {
             ModelType.GPT_3_5_TURBO,
@@ -188,6 +275,15 @@ class ModelFactory:
             ModelType.GPT_4_TURBO_V,
             ModelType.GPT_4O,
             ModelType.GPT_4O_MINI,
+            ModelType.GPT_4O_2024_08_06,
+            ModelType.GPT_4O_MINI_2024_07_18,
+            ModelType.GPT_4_1,
+            ModelType.GPT_4_1_MINI,
+            ModelType.GPT_5,
+            ModelType.GPT_5_MINI,
+            ModelType.GPT_5_NANO,
+            ModelType.GPT_5_2,
+            ModelType.GPT_5_2_MINI,
             None
         }:
             model_class = OpenAIModel

@@ -78,8 +78,8 @@ parser.add_argument('--task', type=str, default="Develop a basic Gomoku game.",
                     help="Prompt of software")
 parser.add_argument('--name', type=str, default="Gomoku",
                     help="Name of software, your software will be generated in WareHouse/name_org_timestamp")
-parser.add_argument('--model', type=str, default="GPT_3_5_TURBO",
-                    help="GPT Model, choose from {'GPT_3_5_TURBO', 'GPT_4', 'GPT_4_TURBO', 'GPT_4O', 'GPT_4O_MINI'}")
+parser.add_argument('--model', type=str, default="GPT_5_2",
+                    help="GPT Model, choose from {'GPT_3_5_TURBO', 'GPT_4', 'GPT_4_TURBO', 'GPT_4O', 'GPT_4O_2024_08_06', 'GPT_4O_MINI', 'GPT_4O_MINI_2024_07_18', 'GPT_4_1', 'GPT_4_1_MINI', 'GPT_5', 'GPT_5_MINI', 'GPT_5_NANO', 'GPT_5_2', 'GPT_5_2_MINI'}")
 parser.add_argument('--path', type=str, default="",
                     help="Your file directory, ChatDev will build upon your software in the Incremental mode")
 args = parser.parse_args()
@@ -90,14 +90,24 @@ args = parser.parse_args()
 #          Init ChatChain
 # ----------------------------------------
 config_path, config_phase_path, config_role_path = get_config(args.config)
-args2type = {'GPT_3_5_TURBO': ModelType.GPT_3_5_TURBO,
-             'GPT_4': ModelType.GPT_4,
-            #  'GPT_4_32K': ModelType.GPT_4_32k,
-             'GPT_4_TURBO': ModelType.GPT_4_TURBO,
-            #  'GPT_4_TURBO_V': ModelType.GPT_4_TURBO_V
-            'GPT_4O': ModelType.GPT_4O,
-            'GPT_4O_MINI': ModelType.GPT_4O_MINI,
-             }
+args2type = {
+    'GPT_3_5_TURBO': ModelType.GPT_3_5_TURBO,
+    'GPT_4': ModelType.GPT_4,
+    #  'GPT_4_32K': ModelType.GPT_4_32k,
+    'GPT_4_TURBO': ModelType.GPT_4_TURBO,
+    #  'GPT_4_TURBO_V': ModelType.GPT_4_TURBO_V
+    'GPT_4O': ModelType.GPT_4O,
+    'GPT_4O_2024_08_06': ModelType.GPT_4O_2024_08_06,
+    'GPT_4O_MINI': ModelType.GPT_4O_MINI,
+    'GPT_4O_MINI_2024_07_18': ModelType.GPT_4O_MINI_2024_07_18,
+    'GPT_4_1': ModelType.GPT_4_1,
+    'GPT_4_1_MINI': ModelType.GPT_4_1_MINI,
+    'GPT_5': ModelType.GPT_5,
+    'GPT_5_MINI': ModelType.GPT_5_MINI,
+    'GPT_5_NANO': ModelType.GPT_5_NANO,
+    'GPT_5_2': ModelType.GPT_5_2,
+    'GPT_5_2_MINI': ModelType.GPT_5_2_MINI,
+}
 if openai_new_api:
     args2type['GPT_3_5_TURBO'] = ModelType.GPT_3_5_TURBO_NEW
 
